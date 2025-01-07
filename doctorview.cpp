@@ -3,53 +3,6 @@
 #include "idatabase.h"
 #include <QFileDialog>
 
-// DoctorView::DoctorView(QWidget *parent)
-//     : QWidget(parent)
-//     , ui(new Ui::DoctorView)
-//     , selectedColumn(-1)
-//     , lastSortedColumn(-1)
-// {
-//     ui->setupUi(this);
-
-//     IDatabase &iDatabase = IDatabase::getInstance();
-//     if(iDatabase.initDoctorModel()){
-//         // 创建排序代理模型
-//         proxyModel = new SortProxyModel(this);
-//         proxyModel->setSourceModel(iDatabase.doctorTabModel);
-//         proxyModel->setDynamicSortFilter(true); // 启用动态排序
-//         proxyModel->setSortCaseSensitivity(Qt::CaseInsensitive); // 设置排序不区分大小写
-
-//         ui->tableView->setModel(iDatabase.doctorTabModel);
-//         // ui->tableView->setModel(proxyModel); // 设置代理模型为tableView的模型
-//         ui->tableView->setSelectionModel(iDatabase.theDoctorSelection);
-//         // ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
-//         ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers); // 表格不允许编辑
-//         ui->tableView->verticalHeader()->setVisible(false); // 隐藏QTableView的默认行号显示
-
-//         // 获取表头
-//         QHeaderView *header = ui->tableView->horizontalHeader();
-//         header->setSectionsClickable(true); // 使表头可点击
-
-//         // 连接表头点击信号到槽函数
-//         connect(header, &QHeaderView::sectionClicked, this, &DoctorView::on_headerSectionClicked);
-
-//         // 设置每一格的宽度
-//         for (int i = 0; i < ui->tableView->model()->columnCount(); ++i) {
-//             if (i == 4 || i == 5) { // 假设第二列和第四列的索引为 1 和 3
-//                 ui->tableView->setColumnWidth(i, 150); // 设置第二列和第四列的宽度为 150 像素
-//             } else {
-//                 ui->tableView->setColumnWidth(i, 80); // 其他列的宽度设置为 80 像素
-//             }
-//         }
-//     }
-// }
-
-// DoctorView::~DoctorView()
-// {
-//     delete ui;
-//     delete proxyModel; // 删除代理模型
-// }
-
 DoctorView::DoctorView(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::DoctorView)
@@ -60,11 +13,8 @@ DoctorView::DoctorView(QWidget *parent)
 
     IDatabase &iDatabase = IDatabase::getInstance();
     if(iDatabase.initDoctorModel()){
-        proxyModel = new QSortFilterProxyModel(this);
-        // 直接使用QSqlTableModel作为tableView的模型
         ui->tableView->setModel(iDatabase.doctorTabModel);
         ui->tableView->setSelectionModel(iDatabase.theDoctorSelection);
-        // ui->tableView->setSelectionBehavior(QAbstractItemView::SelectRows);
         ui->tableView->setEditTriggers(QAbstractItemView::NoEditTriggers); // 表格不允许编辑
         ui->tableView->verticalHeader()->setVisible(false); // 隐藏QTableView的默认行号显示
 
@@ -88,7 +38,6 @@ DoctorView::DoctorView(QWidget *parent)
 
 DoctorView::~DoctorView(){
     delete ui;
-    // 如果您没有使用代理模型，则不需要删除 proxyModel
 }
 
 void DoctorView::on_btSearch_clicked()

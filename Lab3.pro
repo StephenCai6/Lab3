@@ -19,6 +19,8 @@ SOURCES += \
     pageproxymodel.cpp \
     patienteditview.cpp \
     patientview.cpp \
+    recordeditview.cpp \
+    recordview.cpp \
     registerview.cpp \
     sortproxymodel.cpp \
     welcomeview.cpp
@@ -34,6 +36,8 @@ HEADERS += \
     pageproxymodel.h \
     patienteditview.h \
     patientview.h \
+    recordeditview.h \
+    recordview.h \
     registerview.h \
     sortproxymodel.h \
     welcomeview.h
@@ -46,6 +50,8 @@ FORMS += \
     masterview.ui \
     patienteditview.ui \
     patientview.ui \
+    recordeditview.ui \
+    recordview.ui \
     registerview.ui \
     welcomeview.ui
 

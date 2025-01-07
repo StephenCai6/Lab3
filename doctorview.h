@@ -2,7 +2,6 @@
 #define DOCTORVIEW_H
 
 #include <QWidget>
-#include <QSortFilterProxyModel>
 
 namespace Ui {
 class DoctorView;
@@ -18,7 +17,6 @@ public:
 
 private:
     Ui::DoctorView *ui;
-    QSortFilterProxyModel *proxyModel;
     int selectedColumn = -1; // 记录用户选择的列，-1 表示未选择
     int lastSortedColumn = -1; // 记录用户上一次选择的列，-1 表示未选择
 
