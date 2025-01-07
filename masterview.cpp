@@ -9,16 +9,26 @@ MasterView::MasterView(QWidget *parent)
 {
     ui->setupUi(this);
 
-    this->setWindowFlag(Qt::FramelessWindowHint);
+    this->setWindowTitle(" "); // 设置窗口标题
 
     goLoginView();
 
     IDatabase::getInstance();
+    // this->setWindowFlags(Qt::FramelessWindowHint); // 顶部框
+    // this->setWindowFlags(Qt::Tool);// 设置窗口为工具窗口，这将去除标题栏和图标
 }
 
 MasterView::~MasterView()
 {
     delete ui;
+}
+
+void MasterView::goRegisterView()
+{
+    registerView = new RegisterView(this);
+    pushWidgetToStackView(registerView);
+
+    connect(registerView, &RegisterView::goPreviousView,this,&MasterView::goPreviousView);
 }
 
 void MasterView::goLoginView()
@@ -28,6 +38,7 @@ void MasterView::goLoginView()
     pushWidgetToStackView(loginView);
 
     connect(loginView, SIGNAL(loginSuccuss()), this, SLOT(goWelcomView()));
+    connect(loginView, &LoginView::goRegisterView,this,&MasterView::goRegisterView);
 }
 
 void MasterView::goWelcomView()
@@ -46,6 +57,17 @@ void MasterView::goDoctorView()
     qDebug() << "goDoctorView";
     doctorView = new DoctorView(this);
     pushWidgetToStackView(doctorView);
+
+    connect(doctorView, &DoctorView::goDoctorEditView, this, &MasterView::goDoctorEditView);
+}
+
+void MasterView::goDoctorEditView(int index)
+{
+    qDebug() << "goDoctorEditView";
+    doctorEditView = new DoctorEditView(this,index);
+    pushWidgetToStackView(doctorEditView);
+
+    connect(doctorEditView,SIGNAL(goPreviousView()),this,SLOT(goPreviousView()));
 }
 
 void MasterView::goDepartmentView()
@@ -111,11 +133,12 @@ void MasterView::on_stackedWidget_currentChanged(int arg1)
 
     QString title = ui->stackedWidget->currentWidget()->windowTitle();
 
-    if (title == "欢迎"){
-        ui->btLogout->setEnabled(true);
+    if(title == "欢迎")
         ui->btBack->setEnabled(false);
-    } else
+    if(title == "登录" or title == "注册")
         ui->btLogout->setEnabled(false);
+
+    ui->btLogout->setEnabled(true);
 }
 
 

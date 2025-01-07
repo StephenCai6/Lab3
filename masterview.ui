@@ -42,6 +42,9 @@
      </item>
      <item>
       <widget class="QLabel" name="labelTitle">
+       <property name="styleSheet">
+        <string notr="true">font: 13pt &quot;华文彩云&quot;;</string>
+       </property>
        <property name="text">
         <string/>
        </property>

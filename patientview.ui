@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>555</width>
+    <width>632</width>
     <height>410</height>
    </rect>
   </property>
@@ -19,7 +19,7 @@
      <item>
       <widget class="QLineEdit" name="txtSearch">
        <property name="placeholderText">
-        <string>请输入姓名进行查找</string>
+        <string>请输入姓名</string>
        </property>
       </widget>
      </item>
@@ -67,10 +67,117 @@
        </property>
       </widget>
      </item>
+     <item>
+      <widget class="QPushButton" name="btSort">
+       <property name="text">
+        <string>排序</string>
+       </property>
+       <property name="icon">
+        <iconset resource="lab3.qrc">
+         <normaloff>:/img/sort.png</normaloff>:/img/sort.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btImport">
+       <property name="text">
+        <string>导入</string>
+       </property>
+       <property name="icon">
+        <iconset resource="lab3.qrc">
+         <normaloff>:/img/download.png</normaloff>:/img/download.png</iconset>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="btExport">
+       <property name="text">
+        <string>导出</string>
+       </property>
+       <property name="icon">
+        <iconset resource="lab3.qrc">
+         <normaloff>:/img/upload.png</normaloff>:/img/upload.png</iconset>
+       </property>
+      </widget>
+     </item>
     </layout>
    </item>
    <item>
     <widget class="QTableView" name="tableView"/>
+   </item>
+   <item>
+    <layout class="QHBoxLayout" name="horizontalLayout_2">
+     <item>
+      <spacer name="horizontalSpacer">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+     <item>
+      <widget class="QPushButton" name="lastPageBt">
+       <property name="text">
+        <string>上一页</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="currentPage">
+       <property name="text">
+        <string>1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label">
+       <property name="text">
+        <string>/</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="totalPage">
+       <property name="text">
+        <string>1</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignmentFlag::AlignCenter</set>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="nextPageBt">
+       <property name="text">
+        <string>下一页</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <spacer name="horizontalSpacer_2">
+       <property name="orientation">
+        <enum>Qt::Orientation::Horizontal</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>40</width>
+         <height>20</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
    </item>
   </layout>
  </widget>

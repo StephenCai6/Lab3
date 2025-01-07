@@ -10,32 +10,43 @@ CONFIG += c++17
 
 SOURCES += \
     departmentview.cpp \
+    doctoreditview.cpp \
     doctorview.cpp \
     idatabase.cpp \
     loginview.cpp \
     main.cpp \
     masterview.cpp \
+    pageproxymodel.cpp \
     patienteditview.cpp \
     patientview.cpp \
+    registerview.cpp \
+    sortproxymodel.cpp \
     welcomeview.cpp
 
 HEADERS += \
+    RowNumberProxyModel.h \
     departmentview.h \
+    doctoreditview.h \
     doctorview.h \
     idatabase.h \
     loginview.h \
     masterview.h \
+    pageproxymodel.h \
     patienteditview.h \
     patientview.h \
+    registerview.h \
+    sortproxymodel.h \
     welcomeview.h
 
 FORMS += \
     departmentview.ui \
+    doctoreditview.ui \
     doctorview.ui \
     loginview.ui \
     masterview.ui \
     patienteditview.ui \
     patientview.ui \
+    registerview.ui \
     welcomeview.ui
 
 # Default rules for deployment.
@@ -45,3 +56,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     lab3.qrc
+
+DISTFILES +=

@@ -7,5 +7,10 @@
         <file>img/edit.png</file>
         <file>img/new.png</file>
         <file>img/search.png</file>
+        <file>img/sort.png</file>
+        <file>img/page.png</file>
+        <file>img/upload.png</file>
+        <file>img/download.png</file>
+        <file>img/shutdown.png</file>
     </qresource>
 </RCC>

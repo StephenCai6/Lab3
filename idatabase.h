@@ -4,6 +4,10 @@
 #include <QObject>
 #include <QtSql>
 #include <QSqlDatabase>
+#include <QSqlTableModel>
+#include <QItemSelectionModel>
+#include <QFile>
+#include <QTextStream>
 
 class IDatabase : public QObject
 {
@@ -16,6 +20,7 @@ public:
         return instance;
     }
 
+    QString userRegister(int ID, QString fullname, QString username, QString password);
     QString userLogin(QString userName, QString password);
 
 private:
@@ -33,12 +38,27 @@ public:
     bool initPatientModel();
     int addNewPatient();
     bool searchPatient(QString filter);
-    bool deleteCurrentPatient();
+    void deleteCurrentPatient(int rowIndex);
     bool submitPatientEdit();
     void revertPatientEdit();
+    void exportPatientsToCSV(const QString &filePath); // 导出
+    bool importPatientsFromCSV(const QString &filePath); // 导入
 
     QSqlTableModel *patientTabModel; // 数据模型
     QItemSelectionModel *thePatientSelection; // 选择模型
+
+    bool initDoctorModel();
+    int addNewDoctor();
+    bool searchDoctor(QString filter);
+    void deleteCurrentDoctor();
+    bool submitDoctorEdit();  //提交医生编辑
+    void reverDoctorEdit();    //撤销当前的医生编辑操作
+    void exportDoctorsToCSV(const QString &filePath); // 导出
+    bool importDoctorsFromCSV(const QString &filePath); // 导入
+
+    QSqlTableModel *doctorTabModel;  //表示医生数据的模型
+    QItemSelectionModel *theDoctorSelection;  //用于在医生表格中选择医生的行
+
 };
 
 #endif // IDATABASE_H
