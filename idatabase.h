@@ -64,12 +64,24 @@ public:
     bool searchRecord(QString filter);
     void deleteCurrentRecord();
     bool submitRecordEdit();  //提交医生编辑
-    void revertRecordEdit();    //撤销当前的医生编辑操作
+    void revertRecordEdit();  //撤销当前的医生编辑操作
     void exportRecordsToCSV(const QString &filePath); // 导出
     bool importRecordsFromCSV(const QString &filePath); // 导入
 
     QSqlTableModel *recordTabModel;  //表示医生数据的模型
     QItemSelectionModel *theRecordSelection;  //用于在医生表格中选择医生的行
+
+    bool initMedicineModel();
+    int addNewMedicine();
+    bool searchMedicine(QString filter);
+    void deleteCurrentMedicine();
+    bool submitMedicineEdit();  //提交医生编辑
+    void revertMedicineEdit();  //撤销当前的医生编辑操作
+    void exportMedicinesToCSV(const QString &filePath); // 导出
+    bool importMedicinesFromCSV(const QString &filePath); // 导入
+
+    QSqlTableModel *medicineTabModel;  //表示医生数据的模型
+    QItemSelectionModel *theMedicineSelection;  //用于在医生表格中选择医生的行
 
 };
 

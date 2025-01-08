@@ -40,3 +40,9 @@ void WelcomeView::on_btRecord_clicked()
     emit goRecordView();
 }
 
+
+void WelcomeView::on_btMedicine_clicked()
+{
+    emit goMedicineView();
+}
+

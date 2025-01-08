@@ -239,13 +239,16 @@ int IDatabase::addNewDoctor()
 {
     int lastRow = doctorTabModel->rowCount() - 1;
     QModelIndex lastIndex = doctorTabModel->index(lastRow, 0);
+
     int lastId = doctorTabModel->data(lastIndex, Qt::EditRole).toInt();
     doctorTabModel->insertRow(doctorTabModel->rowCount(), QModelIndex());
     QModelIndex curIndex = doctorTabModel->index(doctorTabModel->rowCount() - 1, 1);
+
     int curRecNo = curIndex.row();
     QSqlRecord curRec = doctorTabModel->record(curRecNo);
     curRec.setValue("ID", QString::number(lastId + 1));
     doctorTabModel->setRecord(curRecNo, curRec);
+
     return curIndex.row();
 }
 
@@ -372,10 +375,10 @@ int IDatabase::addNewRecord()
     recordTabModel->insertRow(recordTabModel->rowCount(),QModelIndex());
     QModelIndex curIndex = recordTabModel->index(recordTabModel->rowCount() - 1, 1);
 
+     qDebug() << curIndex;
     int curRecNo = curIndex.row();
     QSqlRecord curRec = recordTabModel->record(curRecNo);
     curRec.setValue("TIMESTAMP",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
-    // curRec.setValue("ID",QUuid::createUuid().toString(QUuid::WithoutBraces));
     recordTabModel->setRecord(curRecNo,curRec);
 
     return curIndex.row();
@@ -396,20 +399,6 @@ void IDatabase::deleteCurrentRecord()
     recordTabModel->submitAll();
     recordTabModel->select();
 }
-// void IDatabase::deleteCurrentRecord(int rowIndex) {
-//     qDebug() << "Deleting row at index:" << rowIndex;
-//     // 直接使用传入的 rowIndex 删除对应的行
-//     if (recordTabModel->removeRow(rowIndex)) {
-//         if (recordTabModel->submitAll()) {
-//             qDebug() << "Row deleted successfully";
-//             recordTabModel->select(); // 重新加载数据
-//         } else {
-//             qDebug() << "Failed to delete row";
-//         }
-//     } else {
-//         qDebug() << "Failed to remove row from model";
-//     }
-// }
 
 // 提交
 bool IDatabase::submitRecordEdit()
@@ -421,4 +410,217 @@ bool IDatabase::submitRecordEdit()
 void IDatabase::revertRecordEdit()
 {
     recordTabModel->revertAll();
+}
+
+bool IDatabase::importRecordsFromCSV(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open file for reading:" << filePath;
+        return false;
+    }
+
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8); // 设置编码为 UTF-8
+    QString line = in.readLine(); // 读取表头并忽略
+
+    recordTabModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    while (!in.atEnd()) {
+        line = in.readLine();
+        QStringList fields = line.split(',');
+        if (fields.size() != 6) { // 确保数据行有6个字段
+            qDebug() << "Incorrect number of fields in line:" << line;
+            continue;
+        }
+
+        QSqlRecord newRecord = recordTabModel->record();
+        newRecord.setValue("ID", fields[0]); // ID 是第一个字段
+        newRecord.setValue("PATIENT_NAME", fields[1]);
+        newRecord.setValue("DOCTOR_NAME", fields[2]);
+        newRecord.setValue("TIMESTAMP", fields[3].toInt());
+        newRecord.setValue("EVENT", fields[4]);
+        newRecord.setValue("MEDICINE", fields[5]);
+
+        recordTabModel->insertRow(recordTabModel->rowCount());
+        recordTabModel->setRecord(recordTabModel->rowCount() - 1, newRecord);
+    }
+
+    file.close();
+
+    // 提交所有更改到数据库
+    if (!recordTabModel->submitAll()) {
+        qDebug() << "Failed to submit changes to the database:" << recordTabModel->lastError();
+        return false;
+    }
+
+    return true;
+}
+
+void IDatabase::exportRecordsToCSV(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open file for writing:" << filePath;
+        return;
+    }
+
+    QTextStream out(&file);
+    // 写入表头
+    QStringList headers;
+    for (int i = 0; i < recordTabModel->columnCount(); ++i) {
+        headers << recordTabModel->headerData(i, Qt::Horizontal).toString();
+    }
+    out << headers.join(",") << "\n";
+
+    // 遍历数据库中的医生数据并写入文件
+    for (int i = 0; i < recordTabModel->rowCount(); ++i) {
+        QStringList row;
+        for (int j = 0; j < recordTabModel->columnCount(); ++j) {
+            QString fieldValue = recordTabModel->data(recordTabModel->index(i, j)).toString();
+            // 检查字段值是否包含逗号或换行符，如果包含，则添加双引号
+            if (fieldValue.contains(',') || fieldValue.contains('\n')) {
+                row << "\"" << fieldValue << "\"";
+            } else {
+                row << fieldValue;
+            }
+        }
+        out << row.join(",") << "\n";
+    }
+
+    file.close();
+    qDebug() << "Patients exported successfully to" << filePath;
+}
+
+// 药品获取数据
+bool IDatabase::initMedicineModel()
+{
+    medicineTabModel = new QSqlTableModel(this, database);
+    medicineTabModel->setTable("Medicine");
+    medicineTabModel->setEditStrategy(QSqlTableModel::OnManualSubmit); // 数据保存方式，OnManualSubmit、OnRowChange
+    medicineTabModel->setSort(medicineTabModel->fieldIndex("ID"),Qt::AscendingOrder); // 排序
+    if(!medicineTabModel->select())
+        return false;
+
+    theMedicineSelection = new QItemSelectionModel(medicineTabModel);
+    return true;
+}
+
+// 增
+int IDatabase::addNewMedicine()
+{
+    medicineTabModel->insertRow(medicineTabModel->rowCount(),QModelIndex());
+    QModelIndex curIndex = medicineTabModel->index(medicineTabModel->rowCount() - 1, 1);
+
+    qDebug() << curIndex;
+    int curRecNo = curIndex.row();
+    QSqlRecord curRec = medicineTabModel->record(curRecNo);
+    curRec.setValue("TIMESTAMP",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+    medicineTabModel->setRecord(curRecNo,curRec);
+
+    return curIndex.row();
+}
+
+// 查
+bool IDatabase::searchMedicine(QString filter)
+{
+    medicineTabModel->setFilter(filter);
+    return medicineTabModel->select();
+}
+
+// 删
+void IDatabase::deleteCurrentMedicine()
+{
+    QModelIndex curIdex = theMedicineSelection->currentIndex();
+    medicineTabModel->removeRow(curIdex.row());
+    medicineTabModel->submitAll();
+    medicineTabModel->select();
+}
+
+// 提交
+bool IDatabase::submitMedicineEdit()
+{
+    return medicineTabModel->submitAll();
+}
+
+// 撤销
+void IDatabase::revertMedicineEdit()
+{
+    medicineTabModel->revertAll();
+}
+
+bool IDatabase::importMedicinesFromCSV(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open file for reading:" << filePath;
+        return false;
+    }
+
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8); // 设置编码为 UTF-8
+    QString line = in.readLine(); // 读取表头并忽略
+
+    medicineTabModel->setEditStrategy(QSqlTableModel::OnManualSubmit);
+    while (!in.atEnd()) {
+        line = in.readLine();
+        QStringList fields = line.split(',');
+        if (fields.size() != 4) { // 确保数据行有6个字段
+            qDebug() << "Incorrect number of fields in line:" << line;
+            continue;
+        }
+
+        QSqlRecord newRecord = medicineTabModel->record();
+        newRecord.setValue("ID", fields[0]); // ID 是第一个字段
+        newRecord.setValue("NAME", fields[1]);
+        newRecord.setValue("DOSAGE", fields[2]);
+        newRecord.setValue("INVENTORY", fields[3]);
+
+        medicineTabModel->insertRow(medicineTabModel->rowCount());
+        medicineTabModel->setRecord(medicineTabModel->rowCount() - 1, newRecord);
+    }
+
+    file.close();
+
+    // 提交所有更改到数据库
+    if (!medicineTabModel->submitAll()) {
+        qDebug() << "Failed to submit changes to the database:" << medicineTabModel->lastError();
+        return false;
+    }
+
+    return true;
+}
+
+void IDatabase::exportMedicinesToCSV(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        qDebug() << "Failed to open file for writing:" << filePath;
+        return;
+    }
+
+    QTextStream out(&file);
+    // 写入表头
+    QStringList headers;
+    for (int i = 0; i < medicineTabModel->columnCount(); ++i) {
+        headers << medicineTabModel->headerData(i, Qt::Horizontal).toString();
+    }
+    out << headers.join(",") << "\n";
+
+    // 遍历数据库中的医生数据并写入文件
+    for (int i = 0; i < medicineTabModel->rowCount(); ++i) {
+        QStringList row;
+        for (int j = 0; j < medicineTabModel->columnCount(); ++j) {
+            QString fieldValue = medicineTabModel->data(medicineTabModel->index(i, j)).toString();
+            // 检查字段值是否包含逗号或换行符，如果包含，则添加双引号
+            if (fieldValue.contains(',') || fieldValue.contains('\n')) {
+                row << "\"" << fieldValue << "\"";
+            } else {
+                row << fieldValue;
+            }
+        }
+        out << row.join(",") << "\n";
+    }
+
+    file.close();
+    qDebug() << "Patients exported successfully to" << filePath;
 }
