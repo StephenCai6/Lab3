@@ -13,6 +13,67 @@ void IDatabase::ininDatabase()
         qDebug() << "open database is ok";
 }
 
+IDatabase::IDatabase(QObject *parent): QObject{parent}
+{
+    ininDatabase();
+}
+
+// 用户注册
+QString IDatabase::userRegister(int id, QString fullname, QString username, QString password)
+{
+    QSqlQuery query;
+
+    // 检查用户名是否已被使用
+    query.prepare("SELECT username FROM user WHERE username = :USER");
+    query.bindValue(":USER", username);
+    if (!query.exec()) {
+        return "Database query execution failed!";
+    }
+
+    qDebug() << query.lastQuery() << query.first();
+
+    // 如果查到已有用户，返回提示信息
+    if (query.first() && query.value("username").isValid()) {
+        return "Username has been used!";
+    } else {
+        // 插入新用户
+        query.prepare("INSERT INTO user (id, fullname, username, password) VALUES (:ID, :FULLNAME, :USERNAME, :PASSWORD)");
+        query.bindValue(":ID", id);
+        query.bindValue(":FULLNAME", fullname);
+        query.bindValue(":USERNAME", username);
+        query.bindValue(":PASSWORD", password); // 实际应用中，密码应该加密存储
+
+        if (query.exec()) {
+            return "User registered successfully!";
+        } else {
+            return "Failed to register user: " + query.lastError().text();
+        }
+    }
+}
+
+// 用户登录
+QString IDatabase::userLogin(QString userName, QString password)
+{
+    QSqlQuery query;
+    query.prepare("select username,password from user where username = :USER");
+    query.bindValue(":USER",userName);
+    query.exec();
+    if(query.first() && query.value("username").isValid()){
+        QString passwd = query.value("password").toString();
+        if(passwd == password){
+            qDebug() << "loginOK";
+            return "loginOK";
+        } else {
+            qDebug() << "wrongPassword";
+            return "wrongPassword";
+        }
+    } else {
+        qDebug() << "no such user";
+        return "wrongUsername";
+    }
+    query.first();
+}
+
 // 病人获取数据
 bool IDatabase::initPatientModel()
 {
@@ -75,67 +136,6 @@ bool IDatabase::submitPatientEdit()
 void IDatabase::revertPatientEdit()
 {
     patientTabModel->revertAll();
-}
-
-// 用户注册
-QString IDatabase::userRegister(int id, QString fullname, QString username, QString password)
-{
-    QSqlQuery query;
-
-    // 检查用户名是否已被使用
-    query.prepare("SELECT username FROM user WHERE username = :USER");
-    query.bindValue(":USER", username);
-    if (!query.exec()) {
-        return "Database query execution failed!";
-    }
-
-    qDebug() << query.lastQuery() << query.first();
-
-    // 如果查到已有用户，返回提示信息
-    if (query.first() && query.value("username").isValid()) {
-        return "Username has been used!";
-    } else {
-        // 插入新用户
-        query.prepare("INSERT INTO user (id, fullname, username, password) VALUES (:ID, :FULLNAME, :USERNAME, :PASSWORD)");
-        query.bindValue(":ID", id);
-        query.bindValue(":FULLNAME", fullname);
-        query.bindValue(":USERNAME", username);
-        query.bindValue(":PASSWORD", password); // 实际应用中，密码应该加密存储
-
-        if (query.exec()) {
-            return "User registered successfully!";
-        } else {
-            return "Failed to register user: " + query.lastError().text();
-        }
-    }
-}
-
-// 用户登录
-QString IDatabase::userLogin(QString userName, QString password)
-{
-    QSqlQuery query;
-    query.prepare("select username,password from user where username = :USER");
-    query.bindValue(":USER",userName);
-    query.exec();
-    if(query.first() && query.value("username").isValid()){
-        QString passwd = query.value("password").toString();
-        if(passwd == password){
-            qDebug() << "loginOK";
-            return "loginOK";
-        } else {
-            qDebug() << "wrongPassword";
-            return "wrongPassword";
-        }
-    } else {
-        qDebug() << "no such user";
-        return "wrongUsername";
-    }
-    query.first();
-}
-
-IDatabase::IDatabase(QObject *parent): QObject{parent}
-{
-    ininDatabase();
 }
 
 // 导入数据
@@ -268,7 +268,7 @@ bool IDatabase::submitDoctorEdit()
     return doctorTabModel->submitAll();
 }
 
-void IDatabase::reverDoctorEdit()
+void IDatabase::revertDoctorEdit()
 {
     return doctorTabModel->revertAll();
 }
@@ -350,4 +350,75 @@ void IDatabase::exportDoctorsToCSV(const QString &filePath)
 
     file.close();
     qDebug() << "Patients exported successfully to" << filePath;
+}
+
+// 就诊记录获取数据
+bool IDatabase::initRecordModel()
+{
+    recordTabModel = new QSqlTableModel(this, database);
+    recordTabModel->setTable("History");
+    recordTabModel->setEditStrategy(QSqlTableModel::OnManualSubmit); // 数据保存方式，OnManualSubmit、OnRowChange
+    recordTabModel->setSort(recordTabModel->fieldIndex("ID"),Qt::AscendingOrder); // 排序
+    if(!recordTabModel->select())
+        return false;
+
+    theRecordSelection = new QItemSelectionModel(recordTabModel);
+    return true;
+}
+
+// 增
+int IDatabase::addNewRecord()
+{
+    recordTabModel->insertRow(recordTabModel->rowCount(),QModelIndex());
+    QModelIndex curIndex = recordTabModel->index(recordTabModel->rowCount() - 1, 1);
+
+    int curRecNo = curIndex.row();
+    QSqlRecord curRec = recordTabModel->record(curRecNo);
+    curRec.setValue("TIMESTAMP",QDateTime::currentDateTime().toString("yyyy-MM-dd"));
+    // curRec.setValue("ID",QUuid::createUuid().toString(QUuid::WithoutBraces));
+    recordTabModel->setRecord(curRecNo,curRec);
+
+    return curIndex.row();
+}
+
+// 查
+bool IDatabase::searchRecord(QString filter)
+{
+    recordTabModel->setFilter(filter);
+    return recordTabModel->select();
+}
+
+// 删
+void IDatabase::deleteCurrentRecord()
+{
+    QModelIndex curIdex = theRecordSelection->currentIndex();
+    recordTabModel->removeRow(curIdex.row());
+    recordTabModel->submitAll();
+    recordTabModel->select();
+}
+// void IDatabase::deleteCurrentRecord(int rowIndex) {
+//     qDebug() << "Deleting row at index:" << rowIndex;
+//     // 直接使用传入的 rowIndex 删除对应的行
+//     if (recordTabModel->removeRow(rowIndex)) {
+//         if (recordTabModel->submitAll()) {
+//             qDebug() << "Row deleted successfully";
+//             recordTabModel->select(); // 重新加载数据
+//         } else {
+//             qDebug() << "Failed to delete row";
+//         }
+//     } else {
+//         qDebug() << "Failed to remove row from model";
+//     }
+// }
+
+// 提交
+bool IDatabase::submitRecordEdit()
+{
+    return recordTabModel->submitAll();
+}
+
+// 撤销
+void IDatabase::revertRecordEdit()
+{
+    recordTabModel->revertAll();
 }
