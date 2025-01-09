@@ -64,12 +64,9 @@ void DoctorView::on_btEdit_clicked()
 {
     qDebug() << "编辑医生信息";
     QModelIndex curIndex = IDatabase::getInstance().theDoctorSelection->currentIndex();
-    // emit goDoctorEditView(curIndex.row());
     qDebug() << curIndex;
     if (curIndex.isValid()) {
         emit goDoctorEditView(curIndex.row());
-        // QModelIndex sourceIndex = proxyModel->mapToSource(curIndex);
-        // emit goDoctorEditView(sourceIndex.row());
     }
 }
 
@@ -100,7 +97,6 @@ void DoctorView::on_btImport_clicked()
     if (!filePath.isEmpty()) {
         if (IDatabase::getInstance().importDoctorsFromCSV(filePath)) {
             qDebug() << "Import successful";
-            // updateModel(); // 更新模型
         } else {
             qDebug() << "Import failed";
         }
